@@ -1,5 +1,6 @@
 {
     "name": "stokoe/ip-whitelist",
+    "license": "proprietary",
     "autoload": {
         "psr-4": {
             "Stokoe\\IpWhitelist\\": "src"
