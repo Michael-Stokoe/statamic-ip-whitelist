@@ -15,7 +15,7 @@ A comprehensive IP whitelist addon for Statamic CMS that provides robust access 
 
 ## Installation
 
-1. The addon is already installed in your `addons/stokoe/ip-whitelist` directory.
+1. `composer require stokoe/ip-whitelist`
 
 2. Publish the configuration file:
 ```bash
@@ -40,7 +40,7 @@ Choose between file or database storage:
 'storage' => 'file',
 
 // Database storage
-'storage' => 'database',
+'storage' => 'database', // Don't forget to run the migrations!
 ```
 
 ### Protected Routes
@@ -94,7 +94,7 @@ The addon supports multiple IP address formats:
 
 - **Exact IP**: `192.168.1.100`
 - **CIDR Notation**: `192.168.1.0/24`
-- **Wildcards**: `192.168.1.*`
+- **Wildcards**: `192.168.1.*` (Allows 192.168.1.1, 192.168.1.2, [...], 192.168.1.255)
 
 ## Permissions
 
@@ -104,7 +104,6 @@ The addon creates a `manage ip whitelist` permission. Assign this to users who s
 
 - Always add your current IP before enabling the whitelist
 - Test access from different locations before deploying
-- Keep a backup method to access your server if locked out
 - Consider using CIDR notation for office networks
 
 ## File Storage Location
@@ -122,6 +121,7 @@ When using database storage, IP addresses are stored in the `whitelisted_ips` ta
 - `ip` - IP address or pattern
 - `name` - Optional description
 - `active` - Boolean status
+- `user_id` - The ID of the user who added the IP
 - `created_at` / `updated_at` - Timestamps
 
 ## Troubleshooting
@@ -135,7 +135,7 @@ If you're locked out:
 php artisan ip-whitelist:manage add YOUR_IP_ADDRESS
 ```
 
-2. Or temporarily disable the middleware by setting `bypass_local` to `true` in local environment
+2. Or temporarily disable the middleware by setting `bypass_local` to `true` in local environment (Only works in local dev)
 
 3. Or directly edit the storage file/database to add your IP
 
@@ -145,4 +145,4 @@ Ensure `bypass_local` is set to `true` in your configuration for local developme
 
 ## Support
 
-For issues or feature requests, please check the addon documentation or contact support.
+For issues or feature requests, please check the addon documentation or raise a Github issue.
