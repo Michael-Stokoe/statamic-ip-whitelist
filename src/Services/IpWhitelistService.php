@@ -35,13 +35,18 @@ class IpWhitelistService
         if (config('ip-whitelist.storage') === 'database') {
             WhitelistedIp::updateOrCreate(
                 ['ip' => $ip],
-                ['name' => $name, 'active' => true]
+                [
+                    'name' => $name, 
+                    'user_id' => auth()->id(),
+                    'active' => true
+                ]
             );
         } else {
             $ips = $this->getWhitelistedIps();
             $ips[] = [
                 'ip' => $ip,
                 'name' => $name,
+                'user_id' => auth()->id(),
                 'active' => true,
                 'created_at' => now()->toISOString(),
             ];
@@ -69,6 +74,7 @@ class IpWhitelistService
                     'ip' => $ip->ip,
                     'name' => $ip->name,
                     'active' => $ip->active,
+                    'added_by' => $ip->added_by,
                     'created_at' => $ip->created_at?->toISOString(),
                 ])
                 ->toArray();
@@ -81,7 +87,18 @@ class IpWhitelistService
         }
 
         $content = File::get($filePath);
-        return json_decode($content, true) ?: [];
+        $ips = json_decode($content, true) ?: [];
+        
+        // Add user info for file storage
+        return array_map(function($ip) {
+            if (isset($ip['user_id'])) {
+                $user = \Statamic\Facades\User::find($ip['user_id']);
+                $ip['added_by'] = $user ? ($user->name() ?? $user->email()) : 'Unknown User';
+            } else {
+                $ip['added_by'] = null;
+            }
+            return $ip;
+        }, $ips);
     }
 
     public function updateIp(string $oldIp, string $newIp, string $name = null): void
