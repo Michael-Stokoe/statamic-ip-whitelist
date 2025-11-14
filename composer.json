@@ -1,0 +1,37 @@
+{
+    "name": "stokoe/ip-whitelist",
+    "autoload": {
+        "psr-4": {
+            "Stokoe\\IpWhitelist\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Stokoe\\IpWhitelist\\Tests\\": "tests"
+        }
+    },
+    "require": {
+        "statamic/cms": "^5.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "pixelfear/composer-dist-plugin": true
+        }
+    },
+    "extra": {
+        "statamic": {
+            "name": "Ip Whitelist",
+            "description": "Ip Whitelist addon"
+        },
+        "laravel": {
+            "providers": [
+                "Stokoe\\IpWhitelist\\ServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
