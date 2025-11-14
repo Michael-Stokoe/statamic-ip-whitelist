@@ -61,7 +61,7 @@ class ServiceProvider extends AddonServiceProvider
                 ->can('manage ip whitelist')
                 ->section('Tools')
                 ->route('ip-whitelist.index')
-                ->icon('shield-check')
+                ->icon('shield-key')
                 ->children([
                     'Manage IPs' => cp_route('ip-whitelist.index'),
                     'Settings' => cp_route('ip-whitelist.settings'),

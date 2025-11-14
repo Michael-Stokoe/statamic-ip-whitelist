@@ -1,3 +1,4 @@
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <style type="text/css">
     .dark\:bg-neutral-800:where(.dark, .dark *) {
         background-color: rgb(38 38 38) !important;
