@@ -1,6 +1,12 @@
 # IP Whitelist for Statamic
 
-A comprehensive IP whitelist addon for Statamic CMS that provides robust access control for your control panel and custom routes.
+A comprehensive IP whitelist addon for Statamic 6 that provides robust access control for your control panel and custom routes.
+
+## Requirements
+
+- PHP 8.3+
+- Laravel 12+
+- Statamic 6+
 
 ## Features
 

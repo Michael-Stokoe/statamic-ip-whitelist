@@ -44,13 +44,22 @@ class IpWhitelistController extends CpController
         ]);
 
         $normalizedIp = IpValidator::normalizeIp($request->ip);
-        
+
         try {
             $this->ipWhitelistService->addIp($normalizedIp, $request->name);
-            return response()->json(['success' => true, 'message' => 'IP address added successfully']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+            }
+
+            return back()->withErrors(['ip' => $e->getMessage()]);
         }
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'IP address added successfully']);
+        }
+
+        return redirect()->to(cp_route('ip-whitelist.index'))->with('success', 'IP address added successfully');
     }
 
     public function update(Request $request, $ip)
@@ -71,24 +80,42 @@ class IpWhitelistController extends CpController
         ]);
 
         $normalizedIp = IpValidator::normalizeIp($request->ip);
-        
+
         try {
             $this->ipWhitelistService->updateIp($ip, $normalizedIp, $request->name);
-            return response()->json(['success' => true, 'message' => 'IP address updated successfully']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+            }
+
+            return back()->withErrors(['ip' => $e->getMessage()]);
         }
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'IP address updated successfully']);
+        }
+
+        return redirect()->to(cp_route('ip-whitelist.index'))->with('success', 'IP address updated successfully');
     }
 
-    public function destroy($ip)
+    public function destroy(Request $request, $ip)
     {
         $this->authorize('manage ip whitelist');
 
         try {
             $this->ipWhitelistService->removeIp($ip);
-            return response()->json(['success' => true, 'message' => 'IP address removed successfully']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+            }
+
+            return back()->withErrors(['ip' => $e->getMessage()]);
         }
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'IP address removed successfully']);
+        }
+
+        return redirect()->to(cp_route('ip-whitelist.index'))->with('success', 'IP address removed successfully');
     }
 }
