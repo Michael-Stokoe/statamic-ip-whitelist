@@ -9,12 +9,10 @@ class IpWhitelistService
 {
     public function isAllowed(string $ip): bool
     {
-        // Always allow default IPs
         if (in_array($ip, config('ip-whitelist.default_allowed_ips', []))) {
             return true;
         }
 
-        // Bypass in local environment if configured
         if (config('ip-whitelist.bypass_local') && app()->environment('local')) {
             return true;
         }
@@ -30,7 +28,7 @@ class IpWhitelistService
         return false;
     }
 
-    public function addIp(string $ip, string $name = null): void
+    public function addIp(string $ip, ?string $name = null): void
     {
         if (config('ip-whitelist.storage') === 'database') {
             WhitelistedIp::updateOrCreate(
@@ -42,7 +40,11 @@ class IpWhitelistService
                 ]
             );
         } else {
-            $ips = $this->getWhitelistedIps();
+            $ips = collect($this->readFileIps())
+                ->reject(fn ($item) => ($item['ip'] ?? null) === $ip)
+                ->values()
+                ->all();
+
             $ips[] = [
                 'ip' => $ip,
                 'name' => $name,
@@ -86,10 +88,8 @@ class IpWhitelistService
             return [];
         }
 
-        $content = File::get($filePath);
-        $ips = json_decode($content, true) ?: [];
+        $ips = $this->readFileIps();
         
-        // Add user info for file storage
         return array_map(function($ip) {
             if (isset($ip['user_id'])) {
                 $user = \Statamic\Facades\User::find($ip['user_id']);
@@ -101,7 +101,7 @@ class IpWhitelistService
         }, $ips);
     }
 
-    public function updateIp(string $oldIp, string $newIp, string $name = null): void
+    public function updateIp(string $oldIp, string $newIp, ?string $name = null): void
     {
         $this->removeIp($oldIp);
         $this->addIp($newIp, $name);
@@ -109,20 +109,17 @@ class IpWhitelistService
 
     private function matchesPattern(string $ip, string $pattern): bool
     {
-        // Exact match
         if ($ip === $pattern) {
             return true;
         }
 
-        // CIDR notation support
         if (strpos($pattern, '/') !== false) {
             return $this->ipInRange($ip, $pattern);
         }
 
-        // Wildcard support (e.g., 192.168.1.*)
         if (strpos($pattern, '*') !== false) {
-            $regex = str_replace('*', '.*', preg_quote($pattern, '/'));
-            return preg_match("/^{$regex}$/", $ip);
+            $regex = str_replace('\*', '.*', preg_quote($pattern, '/'));
+            return (bool) preg_match("/^{$regex}$/", $ip);
         }
 
         return false;
@@ -140,8 +137,20 @@ class IpWhitelistService
             return ($ip & $mask) == $subnet;
         }
 
-        // IPv6 support would go here if needed
         return false;
+    }
+
+    private function readFileIps(): array
+    {
+        $filePath = config('ip-whitelist.file_path');
+
+        if (! File::exists($filePath)) {
+            return [];
+        }
+
+        $content = File::get($filePath);
+
+        return json_decode($content, true) ?: [];
     }
 
     private function saveToFile(array $ips): void

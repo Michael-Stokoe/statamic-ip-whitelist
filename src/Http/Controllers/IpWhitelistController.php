@@ -9,12 +9,7 @@ use Stokoe\IpWhitelist\Services\IpWhitelistService;
 
 class IpWhitelistController extends CpController
 {
-    protected $ipWhitelistService;
-
-    public function __construct(IpWhitelistService $ipWhitelistService)
-    {
-        $this->ipWhitelistService = $ipWhitelistService;
-    }
+    public function __construct(protected IpWhitelistService $ipWhitelistService) {}
 
     public function index()
     {
@@ -22,8 +17,10 @@ class IpWhitelistController extends CpController
 
         $ips = $this->ipWhitelistService->getWhitelistedIps();
         $currentIp = request()->ip();
+        $editingIp = request()->query('edit');
+        $editingEntry = collect($ips)->firstWhere('ip', $editingIp);
 
-        return view('ip-whitelist::index', compact('ips', 'currentIp'));
+        return view('ip-whitelist::index', compact('ips', 'currentIp', 'editingEntry'));
     }
 
     public function store(Request $request)
@@ -62,11 +59,12 @@ class IpWhitelistController extends CpController
         return redirect()->to(cp_route('ip-whitelist.index'))->with('success', 'IP address added successfully');
     }
 
-    public function update(Request $request, $ip)
+    public function update(Request $request)
     {
         $this->authorize('manage ip whitelist');
 
         $request->validate([
+            'original_ip' => 'required|string',
             'ip' => [
                 'required',
                 'string',
@@ -80,15 +78,16 @@ class IpWhitelistController extends CpController
         ]);
 
         $normalizedIp = IpValidator::normalizeIp($request->ip);
+        $originalIp = IpValidator::normalizeIp($request->input('original_ip'));
 
         try {
-            $this->ipWhitelistService->updateIp($ip, $normalizedIp, $request->name);
+            $this->ipWhitelistService->updateIp($originalIp, $normalizedIp, $request->name);
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
             }
 
-            return back()->withErrors(['ip' => $e->getMessage()]);
+            return back()->withInput()->withErrors(['ip' => $e->getMessage()]);
         }
 
         if ($request->wantsJson()) {
@@ -98,9 +97,15 @@ class IpWhitelistController extends CpController
         return redirect()->to(cp_route('ip-whitelist.index'))->with('success', 'IP address updated successfully');
     }
 
-    public function destroy(Request $request, $ip)
+    public function destroy(Request $request)
     {
         $this->authorize('manage ip whitelist');
+
+        $request->validate([
+            'ip' => 'required|string',
+        ]);
+
+        $ip = IpValidator::normalizeIp($request->input('ip'));
 
         try {
             $this->ipWhitelistService->removeIp($ip);
